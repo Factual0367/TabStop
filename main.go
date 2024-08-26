@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 
+	"fyne.io/fyne/theme"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -112,6 +114,9 @@ func main() {
 
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Tab Search")
+	appName := widget.NewLabel("TabStop")
+	appName.Alignment = fyne.TextAlign(fyne.TextAlignCenter)
+	appName.TextStyle = fyne.TextStyle{Bold: true}
 
 	input := widget.NewEntry()
 	input.SetPlaceHolder("Search...")
@@ -144,13 +149,23 @@ func main() {
 			}(tab)
 		})
 
-	searchContainer := container.NewBorder(nil, nil, nil, widget.NewButton("Search", func() {
+	settingsContent := container.NewBorder(nil, nil, nil, nil)
+	myCanvas := myWindow.Canvas()
+	myCanvas.SetContent(settingsContent)
+	thePopup := widget.NewModalPopUp(myCanvas.Content(), myCanvas)
+
+	settingsIcon := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+		log.Println("tapped settings")
+		widget.ShowModalPopUp(thePopup, myCanvas) // show modal popup
+	})
+	topBar := container.NewBorder(nil, nil, appName, settingsIcon)
+
+	searchContainer := container.NewBorder(topBar, nil, nil, widget.NewButton("Search", func() {
 		tabs = getTabs(input.Text)
 		list.Refresh()
 	}), input)
 
 	content := container.NewBorder(searchContainer, nil, nil, nil, list)
-
 	myWindow.SetContent(content)
 	myWindow.Resize(fyne.NewSize(400, 600))
 	myWindow.ShowAndRun()
