@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -32,8 +31,7 @@ func startServer() {
 
 func startServerInBackground() {
 	go startServer()
-	// give the server some time to start up
-	time.Sleep(2 * time.Second)
+
 }
 
 func getTabs(query string) []Tab {
@@ -79,7 +77,6 @@ func getTabs(query string) []Tab {
 			}
 
 			tabs = append(tabs, tab)
-			fmt.Println(tabs)
 		}
 	}
 
@@ -127,7 +124,7 @@ func main() {
 		},
 		func() fyne.CanvasObject {
 
-			return container.NewHBox(
+			return container.NewBorder(nil, nil,
 				widget.NewLabel("template"),
 				widget.NewButton("Download", func() {}),
 			)
