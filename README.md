@@ -36,3 +36,8 @@ Download the latest binary package from [releases](https://github.com/onurhanak/
 ## Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the Unlicense license - see the [LICENSE](LICENSE) file for details.
+
