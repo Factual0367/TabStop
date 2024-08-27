@@ -34,7 +34,7 @@ func Exists(path string) (bool, error) {
 	return false, err
 }
 
-func getCurrentDownloadFolder() string {
+func GetCurrentDownloadFolder() string {
 	var downloadDir string
 	homedir, err := os.UserHomeDir()
 	if err != nil {
@@ -73,7 +73,7 @@ func DownloadTab(url string, artist string, title string) error {
 
 	filename := fmt.Sprintf("%s - %s.%s", artist, title, extension)
 
-	downloadDir := getCurrentDownloadFolder()
+	downloadDir := GetCurrentDownloadFolder()
 
 	filename = path.Join(downloadDir, filename)
 
@@ -158,7 +158,7 @@ func GetTabs(query string) []Tab {
 
 func ShowSettings(w fyne.Window) (modal *widget.PopUp) {
 
-	downloadDir := getCurrentDownloadFolder()
+	downloadDir := GetCurrentDownloadFolder()
 	currentDownloadDirMsg := fmt.Sprintf("Current download directory: \n%s", downloadDir)
 	modal = widget.NewModalPopUp(
 		container.NewVBox(

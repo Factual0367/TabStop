@@ -6,6 +6,7 @@ require (
 	fyne.io/fyne/v2 v2.5.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/onurhanak/songsterrapi v0.1.1-0.20240826181221-7811845c3c8d
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/sqweek/dialog v0.0.0-20240226140203-065105509627
 )
 

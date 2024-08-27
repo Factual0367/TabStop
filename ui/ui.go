@@ -9,11 +9,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/skratchdot/open-golang/open"
 )
-
-// TO DO
-// On download change the icon to folder icon and bind it to a function
-// that will open wherever the tab is
 
 func Run() {
 	myApp := app.New()
@@ -44,7 +41,11 @@ func Run() {
 						o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.ErrorIcon()
 					} else {
 						fmt.Println("Downloaded:", t.Title)
-						o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.ConfirmIcon()
+						o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.FolderOpenIcon()
+						o.(*fyne.Container).Objects[1].(*widget.Button).OnTapped = func() {
+							downloadDir := utils.GetCurrentDownloadFolder()
+							open.Run(downloadDir)
+						}
 					}
 				}
 			}(tab)
