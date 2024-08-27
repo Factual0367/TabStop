@@ -34,6 +34,33 @@ func Exists(path string) (bool, error) {
 	return false, err
 }
 
+func getCurrentDownloadFolder() string {
+	var downloadDir string
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileLocation := path.Join(homedir, ".tabStop")
+	tabStopCfgExists, err := Exists(fileLocation)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if tabStopCfgExists {
+		customDir, err := os.ReadFile(fileLocation)
+		downloadDir = string(customDir)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+	} else {
+		downloadDir, err = os.Getwd()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	return downloadDir
+}
+
 func DownloadTab(url string, artist string, title string) error {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -45,22 +72,10 @@ func DownloadTab(url string, artist string, title string) error {
 	extension := splitURL[len(splitURL)-1]
 
 	filename := fmt.Sprintf("%s - %s.%s", artist, title, extension)
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fileLocation := path.Join(homedir, ".tabStop")
-	tabStopCfgExists, err := Exists(fileLocation)
-	if err != nil {
-		fmt.Println(err)
-	}
-	if tabStopCfgExists {
-		downloadDir, err := os.ReadFile(fileLocation)
-		if err != nil {
-			fmt.Println(err)
-		}
-		filename = path.Join(string(downloadDir), filename)
-	}
+
+	downloadDir := getCurrentDownloadFolder()
+
+	filename = path.Join(downloadDir, filename)
 
 	out, err := os.Create(filename)
 	if err != nil {
@@ -142,11 +157,14 @@ func GetTabs(query string) []Tab {
 }
 
 func ShowSettings(w fyne.Window) (modal *widget.PopUp) {
+
+	downloadDir := getCurrentDownloadFolder()
+	currentDownloadDirMsg := fmt.Sprintf("Current download directory: \n%s", downloadDir)
 	modal = widget.NewModalPopUp(
 		container.NewVBox(
-			widget.NewLabel("Set Download Location"),
-			widget.NewButtonWithIcon("", theme.FolderIcon(), func() { GetFolder() }),
-			widget.NewButton("Close", func() { modal.Hide() }),
+			widget.NewLabel(currentDownloadDirMsg),
+			widget.NewButtonWithIcon("Change", theme.FolderIcon(), func() { GetFolder() }),
+			widget.NewButtonWithIcon("Close", theme.WindowCloseIcon(), func() { modal.Hide() }),
 		),
 		w.Canvas(),
 	)

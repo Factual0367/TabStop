@@ -11,8 +11,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// TODO
-// add current download location to the modal
 func Run() {
 	myApp := app.New()
 	myApp.Settings().SetTheme(theme.DarkTheme())
