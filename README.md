@@ -5,7 +5,14 @@
 </sub>
 <h1 align="center">TabStop</h1>
 
+
+
 **TabStop** is a lightweight and efficient application built with Go and Fyne. It allows you to search for songs or bands and download Guitar Pro tabs directly from [Songsterr](https://www.songsterr.com).
+
+<sub>
+<p align='center'><img  src="assets/screenshot.png" height="400" width="auto"></p>
+</sub>
+
 
 ## Installation
 
