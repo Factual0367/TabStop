@@ -1,7 +1,7 @@
 
 
 <sub>
-<p align='center'><img  src="https://raw.githubusercontent.com/onurhanak/TabStop/main/Icon.png" height="100" width="auto"></p>
+<p align='center'><img  src="Icon.png" height="100" width="auto"></p>
 </sub>
 <h1 align="center">TabStop</h1>
 
