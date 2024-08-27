@@ -1,6 +1,6 @@
 # Makefile
 
-build: linux # windows macos android
+build: linux windows #macos android
 
 linux:
 	go build -o fyne-cross/bin/linux-amd64/tabStop-amd64

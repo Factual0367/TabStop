@@ -11,6 +11,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// TO DO
+// On download change the icon to folder icon and bind it to a function
+// that will open wherever the tab is
+
 func Run() {
 	myApp := app.New()
 	myApp.Settings().SetTheme(theme.DarkTheme())
