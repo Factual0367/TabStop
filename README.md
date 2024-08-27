@@ -13,7 +13,7 @@
 
 Download the latest binary package from [releases](https://github.com/onurhanak/TabStop/releases) and run it.
 
-### Compile by yourself
+### Run from source code
 
 #### Steps
 
