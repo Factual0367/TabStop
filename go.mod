@@ -3,7 +3,6 @@ module TabStop
 go 1.23.0
 
 require (
-	fyne.io/fyne v1.4.3
 	fyne.io/fyne/v2 v2.5.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/onurhanak/songsterrapi v0.1.1-0.20240826181221-7811845c3c8d
