@@ -7,7 +7,7 @@
 
 
 
-**TabStop** is a lightweight and efficient application built with Go and Fyne. It allows you to search for songs or bands and download Guitar Pro tabs directly from [Songsterr](https://www.songsterr.com).
+**TabStop** is a lightweight app built with Go and Fyne. It allows you to search for songs or bands and download Guitar Pro tabs directly from [Songsterr](https://www.songsterr.com).
 
 <sub>
 <p align='center'><img  src="assets/screenshot.png" height="500" width="auto"></p>
