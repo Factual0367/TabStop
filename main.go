@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	"fyne.io/fyne/theme"
@@ -16,6 +16,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/gin-gonic/gin"
 	"github.com/onurhanak/songsterrapi"
+	"github.com/sqweek/dialog"
 )
 
 type Tab struct {
@@ -38,6 +39,7 @@ func startServerInBackground() {
 
 func getTabs(query string) []Tab {
 
+	query = strings.ReplaceAll(query, " ", "%20")
 	resp, err := http.Get("http://localhost:8080/search?query=" + query)
 	if err != nil {
 		fmt.Println(err)
@@ -57,7 +59,7 @@ func getTabs(query string) []Tab {
 		fmt.Println(err)
 
 	}
-
+	fmt.Println(jsonArray)
 	var tabs []Tab
 	for _, item := range jsonArray {
 		if innerMap, ok := item.(map[string]interface{}); ok {
@@ -81,8 +83,20 @@ func getTabs(query string) []Tab {
 			tabs = append(tabs, tab)
 		}
 	}
-
+	fmt.Println(tabs)
 	return tabs
+}
+
+// exists returns whether the given file or directory exists
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
 
 func downloadTab(url string, artist string, title string) error {
@@ -94,7 +108,28 @@ func downloadTab(url string, artist string, title string) error {
 
 	splitURL := strings.Split(url, ".")
 	extension := splitURL[len(splitURL)-1]
+
 	filename := fmt.Sprintf("%s - %s.%s", artist, title, extension)
+	// check if custom download location exists
+	// if exists save tabs there
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileLocation := path.Join(homedir, ".tabStop")
+	tabStopCfgExists, err := exists(fileLocation)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if tabStopCfgExists {
+		downloadDir, err := os.ReadFile(fileLocation)
+		if err != nil {
+			fmt.Println(err)
+		}
+		filename = path.Join(string(downloadDir), filename)
+
+	}
+
 	out, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -107,6 +142,52 @@ func downloadTab(url string, artist string, title string) error {
 	}
 
 	return nil
+}
+
+func saveDownloadLocation(downloadDir string) {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileLocation := path.Join(homedir, ".tabStop")
+	f, err := os.Create(fileLocation)
+	if err != nil {
+		fmt.Println(err)
+	}
+	l, err := f.WriteString(downloadDir)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(l, "bytes written.")
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+func getFolder() {
+	directory, err := dialog.Directory().Title("Select Folder").Browse()
+	if err != nil {
+
+		fmt.Println(err)
+
+	}
+
+	saveDownloadLocation(directory)
+}
+
+func showSettings(w fyne.Window) (modal *widget.PopUp) {
+
+	modal = widget.NewModalPopUp(
+		container.NewVBox(
+			widget.NewLabel("Set Download Location"),
+			widget.NewButtonWithIcon("", theme.FolderIcon(), func() { getFolder() }),
+			widget.NewButton("Close", func() { modal.Hide() }),
+		),
+		w.Canvas(),
+	)
+
+	modal.Show()
+	return modal
 }
 
 func main() {
@@ -131,7 +212,7 @@ func main() {
 
 			return container.NewBorder(nil, nil,
 				widget.NewLabel("template"),
-				widget.NewButton("Download", func() {}),
+				widget.NewButtonWithIcon("", theme.DownloadIcon(), func() {}),
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
@@ -142,22 +223,20 @@ func main() {
 					err := downloadTab(t.downloadLink, t.artist, t.title)
 					if err != nil {
 						fmt.Println("Download failed:", err)
+						o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.ErrorIcon()
+
 					} else {
 						fmt.Println("Downloaded:", t.title)
+						o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.ConfirmIcon()
 					}
 				}
 			}(tab)
 		})
 
-	settingsContent := container.NewBorder(nil, nil, nil, nil)
-	myCanvas := myWindow.Canvas()
-	myCanvas.SetContent(settingsContent)
-	thePopup := widget.NewModalPopUp(myCanvas.Content(), myCanvas)
+	settingsIcon := widget.NewButtonWithIcon("", theme.SettingsIcon(),
 
-	settingsIcon := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
-		log.Println("tapped settings")
-		widget.ShowModalPopUp(thePopup, myCanvas) // show modal popup
-	})
+		func() { showSettings(myWindow) })
+
 	topBar := container.NewBorder(nil, nil, appName, settingsIcon)
 
 	searchContainer := container.NewBorder(topBar, nil, nil, widget.NewButton("Search", func() {
