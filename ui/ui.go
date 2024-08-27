@@ -4,19 +4,17 @@ import (
 	"TabStop/utils"
 	"fmt"
 
-	"fyne.io/fyne/theme"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
 func Run() {
 	myApp := app.New()
+	myApp.Settings().SetTheme(theme.DarkTheme())
 	myWindow := myApp.NewWindow("Tab Search")
-	appName := widget.NewLabel("TabStop")
-	appName.Alignment = fyne.TextAlignCenter
-	appName.TextStyle = fyne.TextStyle{Bold: true}
 
 	input := widget.NewEntry()
 	input.SetPlaceHolder("Search...")
@@ -51,12 +49,19 @@ func Run() {
 	settingsIcon := widget.NewButtonWithIcon("", theme.SettingsIcon(),
 		func() { utils.ShowSettings(myWindow) })
 
-	topBar := container.NewBorder(nil, nil, appName, settingsIcon)
-
-	searchContainer := container.NewBorder(topBar, nil, nil, widget.NewButton("Search", func() {
+	searchBtn := widget.NewButton("Search", func() {
 		tabs = utils.GetTabs(input.Text)
 		list.Refresh()
-	}), input)
+	})
+
+	// bind the enter key to search
+	input.OnSubmitted = func(text string) {
+		tabs = utils.GetTabs(text)
+		list.Refresh()
+	}
+
+	rightSideButtons := container.NewHBox(searchBtn, settingsIcon)
+	searchContainer := container.NewBorder(nil, nil, nil, rightSideButtons, input)
 
 	content := container.NewBorder(searchContainer, nil, nil, nil, list)
 	myWindow.SetContent(content)
