@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	go server.Start() // Start server in background
-	ui.Run()          // Start UI
+	go server.Start()
+	ui.Run()
 }
