@@ -84,47 +84,18 @@ func GetCurrentDownloadFolder() string {
 	return downloadDir
 }
 
-func GetSavedTabs() (map[string]string, error) {
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user home directory: %w", err)
+func GetSavedTabs() []string {
+	downloadDir := GetCurrentDownloadFolder()
+
+	savedTabs, _ := os.ReadDir(downloadDir)
+
+	tabs := make([]string, 0, len(savedTabs))
+	for _, e := range savedTabs {
+		tabs = append(tabs, e.Name())
 	}
 
-	fileLocation := path.Join(homedir, ".tabStop")
+	return tabs
 
-	userCfgExists, err := Exists(fileLocation)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check if config file exists: %w", err)
-	}
-
-	if !userCfgExists {
-		return nil, fmt.Errorf("no configuration file found")
-	}
-
-	file, err := os.ReadFile(fileLocation)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	userData := map[string]interface{}{}
-	err = json.Unmarshal(file, &userData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config file: %w", err)
-	}
-
-	downloadedTabs, ok := userData["downloadedTabs"].(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("no downloaded tabs found")
-	}
-
-	tabs := make(map[string]string)
-	for key, value := range downloadedTabs {
-		if strValue, ok := value.(string); ok {
-			tabs[key] = strValue
-		}
-	}
-
-	return tabs, nil
 }
 
 func DownloadTab(url string, artist string, title string) error {
@@ -154,12 +125,10 @@ func DownloadTab(url string, artist string, title string) error {
 		return err
 	}
 
-	SaveDownloadLocation(downloadDir, filename)
-
 	return nil
 }
 
-func SaveDownloadLocation(downloadDir string, filename string) {
+func SaveDownloadLocation(downloadDir string) {
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println(err)
@@ -168,26 +137,17 @@ func SaveDownloadLocation(downloadDir string, filename string) {
 
 	userData := map[string]interface{}{}
 
-	// check if file exists
 	userCfgExists, err := Exists(fileLocation)
 
 	if userCfgExists {
 		file, _ := os.ReadFile(fileLocation)
 		json.Unmarshal(file, &userData)
 
-		if _, exists := userData["downloadedTabs"]; !exists {
-			userData["downloadedTabs"] = map[string]interface{}{}
-		}
-
-		downloadedTabs := userData["downloadedTabs"].(map[string]interface{})
-		downloadedTabs[filename] = path.Join(downloadDir, filename)
+		userData["downloadLocation"] = downloadDir
 
 	} else {
 		userData = map[string]interface{}{
 			"downloadLocation": downloadDir,
-			"downloadedTabs": map[string]interface{}{
-				filename: path.Join(downloadDir, filename),
-			},
 		}
 	}
 
@@ -255,10 +215,11 @@ func ShowSettings(w fyne.Window) (modal *widget.PopUp) {
 	return modal
 }
 
-func GetFolder() {
+func GetFolder() string {
 	directory, err := dialog.Directory().Title("Select Folder").Browse()
 	if err != nil {
 		fmt.Println(err)
 	}
-	SaveDownloadLocation(directory, "")
+	SaveDownloadLocation(directory)
+	return directory
 }

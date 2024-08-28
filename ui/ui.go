@@ -3,7 +3,6 @@ package ui
 import (
 	"TabStop/utils"
 	"fmt"
-	"os"
 	"path"
 
 	"fyne.io/fyne/v2"
@@ -69,13 +68,7 @@ func createSearchTab(myWindow fyne.Window) *container.TabItem {
 
 func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
 	downloadDir := utils.GetCurrentDownloadFolder()
-
-	savedTabs, _ := os.ReadDir(downloadDir)
-
-	keys := make([]string, 0, len(savedTabs))
-	for _, e := range savedTabs {
-		keys = append(keys, e.Name())
-	}
+	savedTabs := utils.GetSavedTabs()
 
 	list := widget.NewList(
 		func() int { return len(savedTabs) },
@@ -86,7 +79,7 @@ func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			filename := keys[i]
+			filename := savedTabs[i]
 			filepath := path.Join(downloadDir, filename)
 			o.(*fyne.Container).Objects[0].(*widget.Label).SetText(fmt.Sprintf("%s", filename))
 			o.(*fyne.Container).Objects[1].(*widget.Button).OnTapped = func() {
@@ -103,13 +96,18 @@ func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
 }
 
 func createSettingsTab(myWindow fyne.Window) *container.TabItem {
-
 	downloadDir := utils.GetCurrentDownloadFolder()
 	currentDownloadDirMsg := fmt.Sprintf("Current download directory: \n%s", downloadDir)
+	downloadDirLabel := widget.NewLabel(currentDownloadDirMsg)
+
+	changeDownloadLocation := widget.NewButtonWithIcon("Change Download Location", theme.FolderIcon(), func() {
+		newDownloadDir := utils.GetFolder()
+		downloadDirLabel.SetText(fmt.Sprintf("Current download directory: \n%s", newDownloadDir))
+	})
+
 	settingsContent := container.NewVBox(
 		widget.NewLabel(""),
-		container.NewGridWithColumns(4, widget.NewLabel(""), widget.NewLabel(currentDownloadDirMsg),
-			widget.NewButtonWithIcon("Change Download Location", theme.FolderIcon(), func() { utils.GetFolder() }), widget.NewLabel("")),
+		container.NewGridWithColumns(3, widget.NewLabel(""), container.NewGridWithRows(4, widget.NewLabel(""), downloadDirLabel, changeDownloadLocation, widget.NewLabel(""))),
 	)
 
 	settingsContentBordered := container.NewBorder(nil, nil, nil, nil, settingsContent)
