@@ -3,6 +3,8 @@ package ui
 import (
 	"TabStop/utils"
 	"fmt"
+	"os"
+	"path"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -12,11 +14,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-func Run() {
-	myApp := app.New()
-	myApp.Settings().SetTheme(theme.DarkTheme())
-	myWindow := myApp.NewWindow("Tab Search")
-
+func createSearchTab(myWindow fyne.Window) *container.TabItem {
 	input := widget.NewEntry()
 	input.SetPlaceHolder("Search...")
 
@@ -51,25 +49,108 @@ func Run() {
 			}(tab)
 		})
 
-	settingsIcon := widget.NewButtonWithIcon("", theme.SettingsIcon(),
-		func() { utils.ShowSettings(myWindow) })
-
 	searchBtn := widget.NewButton("Search", func() {
 		tabs = utils.GetTabs(input.Text)
 		list.Refresh()
 	})
 
-	// bind the enter key to search
 	input.OnSubmitted = func(text string) {
 		tabs = utils.GetTabs(text)
 		list.Refresh()
 	}
 
-	rightSideButtons := container.NewHBox(searchBtn, settingsIcon)
+	rightSideButtons := container.NewHBox(searchBtn)
 	searchContainer := container.NewBorder(nil, nil, nil, rightSideButtons, input)
 
-	content := container.NewBorder(searchContainer, nil, nil, nil, list)
-	myWindow.SetContent(content)
+	searchContent := container.NewBorder(searchContainer, nil, nil, nil, list)
+
+	return container.NewTabItem("Search", searchContent)
+}
+
+func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
+	downloadDir := utils.GetCurrentDownloadFolder()
+
+	savedTabs, _ := os.ReadDir(downloadDir)
+
+	keys := make([]string, 0, len(savedTabs))
+	for _, e := range savedTabs {
+		keys = append(keys, e.Name())
+	}
+
+	list := widget.NewList(
+		func() int { return len(savedTabs) },
+		func() fyne.CanvasObject {
+			return container.NewBorder(nil, nil,
+				widget.NewLabel("template"),
+				widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {}),
+			)
+		},
+		func(i widget.ListItemID, o fyne.CanvasObject) {
+			filename := keys[i]
+			filepath := path.Join(downloadDir, filename)
+			o.(*fyne.Container).Objects[0].(*widget.Label).SetText(fmt.Sprintf("%s", filename))
+			o.(*fyne.Container).Objects[1].(*widget.Button).OnTapped = func() {
+				err := open.Run(filepath)
+				if err != nil {
+					fmt.Println("Failed to open file:", err)
+					o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.ErrorIcon()
+				}
+			}
+		})
+
+	content := container.NewBorder(nil, nil, nil, nil, list)
+	return container.NewTabItem("My Tabs", content)
+}
+
+func createSettingsTab(myWindow fyne.Window) *container.TabItem {
+
+	downloadDir := utils.GetCurrentDownloadFolder()
+	currentDownloadDirMsg := fmt.Sprintf("Current download directory: \n%s", downloadDir)
+	settingsContent := container.NewVBox(
+		widget.NewLabel(""),
+		container.NewGridWithColumns(4, widget.NewLabel(""), widget.NewLabel(currentDownloadDirMsg),
+			widget.NewButtonWithIcon("Change Download Location", theme.FolderIcon(), func() { utils.GetFolder() }), widget.NewLabel("")),
+	)
+
+	settingsContentBordered := container.NewBorder(nil, nil, nil, nil, settingsContent)
+	return container.NewTabItem("Settings", settingsContentBordered)
+}
+
+func Run() {
+	myApp := app.New()
+	myApp.Settings().SetTheme(theme.DarkTheme())
+	myWindow := myApp.NewWindow("Tab Search")
+
+	searchTab := createSearchTab(myWindow)
+	searchTab.Icon = theme.SearchIcon()
+	myTabsTab := createMyTabsTab(myWindow)
+	myTabsTab.Icon = theme.StorageIcon()
+	settingsTab := createSettingsTab(myWindow)
+	settingsTab.Icon = theme.SettingsIcon()
+	appTabs := container.NewAppTabs(
+		searchTab,
+		myTabsTab,
+		settingsTab,
+	)
+
+	// required to refresh the myTabs list every time
+	// the tab gets selected
+	appTabs.OnSelected = func(tab *container.TabItem) {
+		if tab.Text == "My Tabs" {
+			newMyTabsTab := createMyTabsTab(myWindow)
+			newMyTabsTab.Icon = theme.StorageIcon()
+			appTabs.Items[1] = newMyTabsTab
+			appTabs.Refresh()
+		} else if tab.Text == "Settings" {
+			newSettingsTab := createSettingsTab(myWindow)
+			newSettingsTab.Icon = theme.SettingsIcon()
+			appTabs.Items[2] = newSettingsTab
+			appTabs.Refresh()
+		}
+	}
+
+	appTabs.SetTabLocation(container.TabLocationLeading)
+	myWindow.SetContent(appTabs)
 	myWindow.Resize(fyne.NewSize(400, 600))
 	myWindow.ShowAndRun()
 }

@@ -39,26 +39,92 @@ func GetCurrentDownloadFolder() string {
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println(err)
+		return ""
 	}
 	fileLocation := path.Join(homedir, ".tabStop")
+
 	tabStopCfgExists, err := Exists(fileLocation)
 	if err != nil {
 		fmt.Println(err)
+		return ""
 	}
+
 	if tabStopCfgExists {
-		customDir, err := os.ReadFile(fileLocation)
-		downloadDir = string(customDir)
+		file, err := os.ReadFile(fileLocation)
 		if err != nil {
 			fmt.Println(err)
+			return ""
+		}
+
+		userData := map[string]interface{}{}
+		err = json.Unmarshal(file, &userData)
+		if err != nil {
+			fmt.Println(err)
+			return ""
+		}
+
+		if dl, exists := userData["downloadLocation"].(string); exists {
+			downloadDir = dl
+		} else {
+			downloadDir, err = os.Getwd()
+			if err != nil {
+				fmt.Println(err)
+				return ""
+			}
 		}
 
 	} else {
 		downloadDir, err = os.Getwd()
 		if err != nil {
 			fmt.Println(err)
+			return ""
 		}
 	}
+
 	return downloadDir
+}
+
+func GetSavedTabs() (map[string]string, error) {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user home directory: %w", err)
+	}
+
+	fileLocation := path.Join(homedir, ".tabStop")
+
+	userCfgExists, err := Exists(fileLocation)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if config file exists: %w", err)
+	}
+
+	if !userCfgExists {
+		return nil, fmt.Errorf("no configuration file found")
+	}
+
+	file, err := os.ReadFile(fileLocation)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	userData := map[string]interface{}{}
+	err = json.Unmarshal(file, &userData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config file: %w", err)
+	}
+
+	downloadedTabs, ok := userData["downloadedTabs"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("no downloaded tabs found")
+	}
+
+	tabs := make(map[string]string)
+	for key, value := range downloadedTabs {
+		if strValue, ok := value.(string); ok {
+			tabs[key] = strValue
+		}
+	}
+
+	return tabs, nil
 }
 
 func DownloadTab(url string, artist string, title string) error {
@@ -75,9 +141,9 @@ func DownloadTab(url string, artist string, title string) error {
 
 	downloadDir := GetCurrentDownloadFolder()
 
-	filename = path.Join(downloadDir, filename)
+	filepath := path.Join(downloadDir, filename)
 
-	out, err := os.Create(filename)
+	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
@@ -88,28 +154,45 @@ func DownloadTab(url string, artist string, title string) error {
 		return err
 	}
 
+	SaveDownloadLocation(downloadDir, filename)
+
 	return nil
 }
 
-func SaveDownloadLocation(downloadDir string) {
+func SaveDownloadLocation(downloadDir string, filename string) {
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println(err)
 	}
 	fileLocation := path.Join(homedir, ".tabStop")
-	f, err := os.Create(fileLocation)
-	if err != nil {
-		fmt.Println(err)
+
+	userData := map[string]interface{}{}
+
+	// check if file exists
+	userCfgExists, err := Exists(fileLocation)
+
+	if userCfgExists {
+		file, _ := os.ReadFile(fileLocation)
+		json.Unmarshal(file, &userData)
+
+		if _, exists := userData["downloadedTabs"]; !exists {
+			userData["downloadedTabs"] = map[string]interface{}{}
+		}
+
+		downloadedTabs := userData["downloadedTabs"].(map[string]interface{})
+		downloadedTabs[filename] = path.Join(downloadDir, filename)
+
+	} else {
+		userData = map[string]interface{}{
+			"downloadLocation": downloadDir,
+			"downloadedTabs": map[string]interface{}{
+				filename: path.Join(downloadDir, filename),
+			},
+		}
 	}
-	l, err := f.WriteString(downloadDir)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(l, "bytes written.")
-	err = f.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
+
+	fileData, _ := json.MarshalIndent(userData, "", "  ")
+	_ = os.WriteFile(fileLocation, fileData, 0644)
 }
 
 func GetTabs(query string) []Tab {
@@ -177,5 +260,5 @@ func GetFolder() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	SaveDownloadLocation(directory)
+	SaveDownloadLocation(directory, "")
 }
