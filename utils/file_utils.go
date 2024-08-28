@@ -9,10 +9,6 @@ import (
 	"path"
 	"strings"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 	"github.com/sqweek/dialog"
 )
 
@@ -197,22 +193,6 @@ func GetTabs(query string) []Tab {
 		}
 	}
 	return tabs
-}
-
-func ShowSettings(w fyne.Window) (modal *widget.PopUp) {
-
-	downloadDir := GetCurrentDownloadFolder()
-	currentDownloadDirMsg := fmt.Sprintf("Current download directory: \n%s", downloadDir)
-	modal = widget.NewModalPopUp(
-		container.NewVBox(
-			widget.NewLabel(currentDownloadDirMsg),
-			widget.NewButtonWithIcon("Change", theme.FolderIcon(), func() { GetFolder() }),
-			widget.NewButtonWithIcon("Close", theme.WindowCloseIcon(), func() { modal.Hide() }),
-		),
-		w.Canvas(),
-	)
-	modal.Show()
-	return modal
 }
 
 func GetFolder() string {
