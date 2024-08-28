@@ -105,12 +105,15 @@ func createSettingsTab(myWindow fyne.Window) *container.TabItem {
 		downloadDirLabel.SetText(fmt.Sprintf("Current download directory: \n%s", newDownloadDir))
 	})
 
-	settingsContent := container.NewVBox(
-		widget.NewLabel(""),
-		container.NewGridWithColumns(3, widget.NewLabel(""), container.NewGridWithRows(4, widget.NewLabel(""), downloadDirLabel, changeDownloadLocation, widget.NewLabel(""))),
-	)
+	padding := widget.NewLabel("")
 
+	settingsInnerContent := container.NewGridWithRows(4, padding, downloadDirLabel, changeDownloadLocation)
+	settingsContent := container.NewVBox(
+		padding,
+		container.NewGridWithColumns(3, padding, settingsInnerContent, padding),
+	)
 	settingsContentBordered := container.NewBorder(nil, nil, nil, nil, settingsContent)
+
 	return container.NewTabItem("Settings", settingsContentBordered)
 }
 
