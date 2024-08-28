@@ -75,7 +75,7 @@ func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil,
 				widget.NewLabel("template"),
-				widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {}),
+				widget.NewButtonWithIcon("", theme.FileIcon(), func() {}),
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/sqweek/dialog"
@@ -101,6 +102,10 @@ func DownloadTab(url string, artist string, title string) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download file: %s", resp.Status)
+	}
+
 	splitURL := strings.Split(url, ".")
 	extension := splitURL[len(splitURL)-1]
 
@@ -108,7 +113,7 @@ func DownloadTab(url string, artist string, title string) error {
 
 	downloadDir := GetCurrentDownloadFolder()
 
-	filepath := path.Join(downloadDir, filename)
+	filepath := filepath.Join(downloadDir, filename)
 
 	out, err := os.Create(filepath)
 	if err != nil {
@@ -129,7 +134,7 @@ func SaveDownloadLocation(downloadDir string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fileLocation := path.Join(homedir, ".tabStop")
+	fileLocation := filepath.Join(homedir, ".tabStop")
 
 	userData := map[string]interface{}{}
 
