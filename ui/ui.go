@@ -139,11 +139,6 @@ func Run() {
 			newMyTabsTab.Icon = theme.StorageIcon()
 			appTabs.Items[1] = newMyTabsTab
 			appTabs.Refresh()
-		} else if tab.Text == "Settings" {
-			newSettingsTab := createSettingsTab(myWindow)
-			newSettingsTab.Icon = theme.SettingsIcon()
-			appTabs.Items[2] = newSettingsTab
-			appTabs.Refresh()
 		}
 	}
 
