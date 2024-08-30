@@ -35,7 +35,7 @@ Download the latest binary package from [releases](https://github.com/onurhanak/
     go mod tidy
     ```
 
-3. Build and run the application:
+3. Run the application:
     ```sh
     go run main.go
     ```
