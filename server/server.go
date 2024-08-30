@@ -8,5 +8,8 @@ import (
 func Start() {
 	router := gin.Default()
 	router.GET("/search", songsterrapi.SearchRequest)
-	router.Run("localhost:8080")
+	err := router.Run("localhost:8080")
+	if err != nil {
+		return
+	}
 }

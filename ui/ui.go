@@ -13,7 +13,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-func createSearchTab(myWindow fyne.Window) *container.TabItem {
+func createSearchTab() *container.TabItem {
 	input := widget.NewEntry()
 	input.SetPlaceHolder("Search...")
 
@@ -41,7 +41,10 @@ func createSearchTab(myWindow fyne.Window) *container.TabItem {
 						o.(*fyne.Container).Objects[1].(*widget.Button).Icon = theme.FolderOpenIcon()
 						o.(*fyne.Container).Objects[1].(*widget.Button).OnTapped = func() {
 							downloadDir := utils.GetCurrentDownloadFolder()
-							open.Run(downloadDir)
+							err := open.Run(downloadDir)
+							if err != nil {
+								return
+							}
 						}
 					}
 				}
@@ -66,7 +69,7 @@ func createSearchTab(myWindow fyne.Window) *container.TabItem {
 	return container.NewTabItem("Search", searchContent)
 }
 
-func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
+func createMyTabsTab() *container.TabItem {
 	downloadDir := utils.GetCurrentDownloadFolder()
 	savedTabs := utils.GetSavedTabs()
 
@@ -95,7 +98,7 @@ func createMyTabsTab(myWindow fyne.Window) *container.TabItem {
 	return container.NewTabItem("My Tabs", content)
 }
 
-func createSettingsTab(myWindow fyne.Window) *container.TabItem {
+func createSettingsTab() *container.TabItem {
 	downloadDir := utils.GetCurrentDownloadFolder()
 	currentDownloadDirMsg := fmt.Sprintf("Current download directory: \n%s", downloadDir)
 	downloadDirLabel := widget.NewLabel(currentDownloadDirMsg)
@@ -122,11 +125,11 @@ func Run() {
 	myApp.Settings().SetTheme(theme.DarkTheme())
 	myWindow := myApp.NewWindow("Tab Search")
 
-	searchTab := createSearchTab(myWindow)
+	searchTab := createSearchTab()
 	searchTab.Icon = theme.SearchIcon()
-	myTabsTab := createMyTabsTab(myWindow)
+	myTabsTab := createMyTabsTab()
 	myTabsTab.Icon = theme.StorageIcon()
-	settingsTab := createSettingsTab(myWindow)
+	settingsTab := createSettingsTab()
 	settingsTab.Icon = theme.SettingsIcon()
 	appTabs := container.NewAppTabs(
 		searchTab,
@@ -138,7 +141,7 @@ func Run() {
 	// the tab gets selected
 	appTabs.OnSelected = func(tab *container.TabItem) {
 		if tab.Text == "My Tabs" {
-			newMyTabsTab := createMyTabsTab(myWindow)
+			newMyTabsTab := createMyTabsTab()
 			newMyTabsTab.Icon = theme.StorageIcon()
 			appTabs.Items[1] = newMyTabsTab
 			appTabs.Refresh()
