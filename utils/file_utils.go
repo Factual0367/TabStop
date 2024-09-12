@@ -88,11 +88,12 @@ func GetSavedTabs() []string {
 
 	tabs := make([]string, 0, len(savedTabs))
 	for _, e := range savedTabs {
-		tabs = append(tabs, e.Name())
+		if strings.Contains(e.Name(), ".gp") {
+			tabs = append(tabs, e.Name())
+		}
 	}
 
 	return tabs
-
 }
 
 func DownloadTab(url string, artist string, title string) error {
